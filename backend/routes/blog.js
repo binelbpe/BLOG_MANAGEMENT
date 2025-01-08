@@ -8,7 +8,7 @@ router.get("/", blogController.getAllBlogs);
 router.get("/:id", blogController.getBlogById);
 
 // Protected routes
-router.use(auth); // Apply auth middleware to all routes below
+router.use(auth); 
 router.post("/", blogController.createBlog);
 router.get("/user/my-blogs", blogController.getUserBlogs);
 router.patch("/:id", blogController.updateBlog);

@@ -33,7 +33,7 @@ export default function Register() {
     password: {
       required: true,
       minLength: 6,
-      custom: (value: string) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value), // Requires lowercase, uppercase, and number
+      custom: (value: string) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value),
     },
   };
 
@@ -41,7 +41,7 @@ export default function Register() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error when user starts typing
+    
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }

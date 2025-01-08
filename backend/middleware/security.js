@@ -7,17 +7,17 @@ const cors = require("cors");
 
 // Rate limiting configuration
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Too many requests from this IP, please try again later",
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Auth routes limiter (more strict)
+// Auth routes limiter
 const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 105, // 5 attempts per hour
+  windowMs: 60 * 60 * 1000, 
+  max: 105,
   message: "Too many login attempts, please try again later",
   standardHeaders: true,
   legacyHeaders: false,
@@ -52,7 +52,7 @@ const securityMiddleware = {
 
   // Prevent HTTP Parameter Pollution
   hpp: hpp({
-    whitelist: ["sort", "page", "limit"], // Allow these query params to be duplicated
+    whitelist: ["sort", "page", "limit"], 
   }),
 
   // Rate limiting

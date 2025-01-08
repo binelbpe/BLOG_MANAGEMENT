@@ -21,7 +21,7 @@ app.use("/api/auth/", security.authLimiter);
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/blogs", require("./routes/blog"));
 
-// 404 handler - must be before error handler
+// 404 handler 
 app.use((req, res) => {
   res.status(404).json({
     status: "fail",
@@ -29,7 +29,7 @@ app.use((req, res) => {
   });
 });
 
-// Error handler middleware - must be last
+// Error handler middleware
 app.use(errorHandler);
 
 // Enhanced MongoDB connection

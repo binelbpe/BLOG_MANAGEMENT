@@ -64,7 +64,6 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       throw new APIError("All fields are required", 400, {
         email: !email ? "Email is required" : "",
@@ -72,7 +71,6 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    // Find user
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       throw new APIError("Authentication failed", 401, {
@@ -81,7 +79,6 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       throw new APIError("Authentication failed", 401, {
@@ -90,7 +87,6 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    // Generate tokens
     const tokens = await tokenUtils.generateTokens(user._id);
 
     res.json({

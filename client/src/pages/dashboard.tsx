@@ -38,12 +38,11 @@ function Dashboard() {
     }
   };
 
-  // Initialize with first page
   useEffect(() => {
     fetchBlogs(1);
   }, []);
 
-  // Intersection Observer callback
+ 
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const target = entries[0];
@@ -54,7 +53,6 @@ function Dashboard() {
     [hasMore, loading]
   );
 
-  // Set up intersection observer
   useEffect(() => {
     const option = {
       root: null,
@@ -67,7 +65,6 @@ function Dashboard() {
     return () => observer.disconnect();
   }, [handleObserver]);
 
-  // Fetch more data when page changes
   useEffect(() => {
     if (page > 1) {
       fetchBlogs(page);
@@ -79,7 +76,7 @@ function Dashboard() {
       try {
         const response = await api.delete(`/blogs/${id}`);
         toast.success(response.data.message);
-        fetchBlogs(1); // Reset to first page after delete
+        fetchBlogs(1); 
       } catch (error) {
         const apiError = handleAPIError(error);
         toast.error(apiError.message);
