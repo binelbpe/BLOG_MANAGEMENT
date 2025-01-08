@@ -27,41 +27,63 @@ export default function Login() {
   return (
     <Layout>
       <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Login</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-primary mb-2">Welcome Back</h1>
+          <p className="text-gray-600">Sign in to your account to continue</p>
+        </div>
+
+        {/* Form */}
+        <div className="bg-white rounded-xl p-8 shadow-sm">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 font-medium"
+            >
+              Sign In
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600">
+              Don't have an account?{" "}
+              <Link
+                href="/register"
+                className="text-primary hover:text-primary/80 font-medium"
+              >
+                Register here
+              </Link>
+            </p>
           </div>
-          <div>
-            <label className="block mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-          >
-            Login
-          </button>
-        </form>
-        <p className="mt-4 text-center">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-blue-600 hover:text-blue-800">
-            Register
-          </Link>
-        </p>
+        </div>
       </div>
     </Layout>
   );

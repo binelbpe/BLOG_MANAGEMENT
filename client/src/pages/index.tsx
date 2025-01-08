@@ -15,25 +15,20 @@ export default function Home() {
 
   const fetchBlogs = async () => {
     try {
-      console.log("Fetching blogs...");
       const response = await api.get("/blogs");
-      console.log("API Response:", response.data);
       setBlogs(response.data);
       setLoading(false);
     } catch (error: any) {
-      console.error("Error fetching blogs:", error);
       toast.error("Failed to fetch blogs");
       setLoading(false);
     }
   };
 
-  console.log("Current blogs state:", blogs);
-
   if (loading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
         </div>
       </Layout>
     );
@@ -42,21 +37,24 @@ export default function Home() {
   return (
     <Layout>
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-16 mb-12 rounded-2xl">
-        <div className="max-w-4xl mx-auto text-center px-4">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+      <div className="relative bg-primary rounded-3xl overflow-hidden mb-16">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary"></div>
+        <div className="relative max-w-4xl mx-auto px-4 py-20 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
             Welcome to Our Blog Community
           </h1>
-          <p className="text-lg md:text-xl text-blue-100">
+          <p className="text-xl text-secondary/90 max-w-2xl mx-auto">
             Discover stories, ideas, and insights from our community of writers.
           </p>
         </div>
       </div>
 
-      {/* Blog Grid */}
-      <div className="max-w-7xl mx-auto px-4">
+      {/* Featured Section */}
+      <div className="max-w-7xl mx-auto px-4 mb-16">
+        <h2 className="text-2xl font-bold text-primary mb-8">Latest Stories</h2>
+
         {blogs.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="bg-white rounded-xl p-12 text-center shadow-sm">
             <p className="text-xl text-gray-600">No blogs available yet.</p>
           </div>
         ) : (
@@ -64,18 +62,18 @@ export default function Home() {
             {blogs.map((blog) => (
               <article
                 key={blog._id}
-                className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col group"
+                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
               >
-                {/* Author Info */}
-                <div className="p-6 flex-1">
-                  <div className="flex items-center mb-4">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                {/* Card Header with Author Info */}
+                <div className="p-6">
+                  <div className="flex items-center mb-6">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-lg shadow-sm">
                       {typeof blog.author === "object"
                         ? blog.author.username.charAt(0).toUpperCase()
                         : "U"}
                     </div>
                     <div className="ml-4">
-                      <p className="font-semibold text-gray-800">
+                      <p className="font-medium text-gray-900">
                         {typeof blog.author === "object"
                           ? blog.author.username
                           : "Unknown"}
@@ -91,21 +89,21 @@ export default function Home() {
                   </div>
 
                   {/* Blog Content */}
-                  <h2 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary transition-colors duration-200">
                     {blog.title}
-                  </h2>
-                  <p className="text-gray-600 mb-4 line-clamp-3">
+                  </h3>
+                  <p className="text-gray-600 line-clamp-3 mb-6">
                     {blog.content}
                   </p>
 
                   {/* Read More Link */}
                   <Link
                     href={`/blogs/${blog._id}`}
-                    className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium group-hover:translate-x-2 transition-transform duration-200"
+                    className="inline-flex items-center text-primary hover:text-highlight transition-colors duration-200 font-medium group-hover:translate-x-2"
                   >
                     Read more
                     <svg
-                      className="ml-2 w-4 h-4"
+                      className="ml-2 w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -120,12 +118,12 @@ export default function Home() {
                   </Link>
                 </div>
 
-                {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                {/* Card Footer */}
+                <div className="px-6 py-4 bg-background border-t border-gray-100">
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <span className="flex items-center">
                       <svg
-                        className="w-4 h-4 mr-1 text-blue-500"
+                        className="w-4 h-4 mr-1 text-primary"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -141,7 +139,7 @@ export default function Home() {
                     </span>
                     <span className="flex items-center">
                       <svg
-                        className="w-4 h-4 mr-1 text-blue-500"
+                        className="w-4 h-4 mr-1 text-primary"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"

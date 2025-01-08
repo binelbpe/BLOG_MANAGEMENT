@@ -32,51 +32,110 @@ export default function Register() {
   return (
     <Layout>
       <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Register</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block mb-1">Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-primary mb-2">
+            Create Account
+          </h1>
+          <p className="text-gray-600">Join our community and start sharing</p>
+        </div>
+
+        {/* Form */}
+        <div className="bg-white rounded-xl p-8 shadow-sm">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                placeholder="Choose a username"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                placeholder="Create a password"
+                required
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Password must be at least 6 characters long
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 font-medium flex items-center justify-center"
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              Create Account
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="text-primary hover:text-primary/80 font-medium"
+              >
+                Sign in here
+              </Link>
+            </p>
           </div>
-          <div>
-            <label className="block mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
+
+          {/* Terms and Privacy */}
+          <div className="mt-6 text-center text-sm text-gray-500">
+            By creating an account, you agree to our{" "}
+            <Link href="/terms" className="text-primary hover:text-primary/80">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/privacy"
+              className="text-primary hover:text-primary/80"
+            >
+              Privacy Policy
+            </Link>
           </div>
-          <div>
-            <label className="block mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-          >
-            Register
-          </button>
-        </form>
-        <p className="mt-4 text-center">
-          Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 hover:text-blue-800">
-            Login
-          </Link>
-        </p>
+        </div>
       </div>
     </Layout>
   );
