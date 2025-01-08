@@ -5,85 +5,95 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { User, AuthState } from "@/types";
 import api from "@/utils/api";
 
-interface AuthContextType extends AuthState {
-  login: (token: string, user: User) => void;
-  logout: () => void;
-  loading: boolean;
+interface User {
+  id: string;
+  username: string;
+  email: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (accessToken: string, refreshToken: string, user: User) => void;
+  logout: () => Promise<void>;
+  logoutAll: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    token: null,
-    isAuthenticated: false,
-  });
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const storedUser = localStorage.getItem("user");
-
-        if (token && storedUser) {
-          // Set default authorization header
-          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-          // Verify token is still valid
-          const response = await api.get("/auth/verify");
-          if (response.data.valid) {
-            setAuthState({
-              token,
-              user: JSON.parse(storedUser),
-              isAuthenticated: true,
-            });
-          } else {
-            // Token is invalid, clear storage
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-          }
-        }
-      } catch (error) {
-        // Handle error silently and clear storage
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
+    checkAuth();
   }, []);
 
-  const login = (token: string, user: User) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    setAuthState({
-      token,
-      user,
-      isAuthenticated: true,
-    });
+  const checkAuth = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      if (!accessToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await api.get("/users/me");
+      setUser(response.data);
+    } catch (error) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    delete api.defaults.headers.common["Authorization"];
-    setAuthState({
-      token: null,
-      user: null,
-      isAuthenticated: false,
-    });
+  const login = (accessToken: string, refreshToken: string, userData: User) => {
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("refreshToken", refreshToken);
+    setUser(userData);
+  };
+
+  const logout = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (refreshToken) {
+        await api.post("/auth/logout", { refreshToken });
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      setUser(null);
+    }
+  };
+
+  const logoutAll = async () => {
+    try {
+      await api.post("/auth/logout-all");
+    } catch (error) {
+      console.error("Logout all error:", error);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      setUser(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+        logoutAll,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -52,17 +52,15 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       const response = await api.post("/auth/login", formData);
-      login(response.data.token, response.data.user);
+      const { accessToken, refreshToken, user } = response.data;
+      login(accessToken, refreshToken, user);
       toast.success("Login successful!");
       router.push("/dashboard");
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message || "Invalid credentials";
-      toast.error(errorMessage);
-      setErrors({
-        email: errorMessage,
-        password: errorMessage,
-      });
+      toast.error(error.response?.data?.message || "Login failed");
+      if (error.response?.data?.errors) {
+        setErrors(error.response.data.errors);
+      }
     } finally {
       setIsSubmitting(false);
     }
