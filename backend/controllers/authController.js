@@ -1,18 +1,17 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 const tokenUtils = require("../utils/tokenUtils");
+const { APIError } = require("../utils/errorHandler");
 
 // Register User
 exports.register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Validate input
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Check existing user
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
     });
@@ -32,11 +31,9 @@ exports.register = async (req, res) => {
       }
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
     const user = new User({
       username,
       email: email.toLowerCase(),
@@ -45,7 +42,6 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    // Generate tokens
     const tokens = await tokenUtils.generateTokens(user._id);
 
     res.status(201).json({
@@ -64,36 +60,33 @@ exports.register = async (req, res) => {
 };
 
 // Login User
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     // Validate input
     if (!email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      throw new APIError("All fields are required", 400, {
+        email: !email ? "Email is required" : "",
+        password: !password ? "Password is required" : "",
+      });
     }
 
     // Find user
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(401).json({
-        message: "Authentication failed",
-        errors: {
-          email: "Invalid email or password",
-          password: "Invalid email or password",
-        },
+      throw new APIError("Authentication failed", 401, {
+        email: "Invalid email or password",
+        password: "Invalid email or password",
       });
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({
-        message: "Authentication failed",
-        errors: {
-          email: "Invalid email or password",
-          password: "Invalid email or password",
-        },
+      throw new APIError("Authentication failed", 401, {
+        email: "Invalid email or password",
+        password: "Invalid email or password",
       });
     }
 
@@ -101,17 +94,19 @@ exports.login = async (req, res) => {
     const tokens = await tokenUtils.generateTokens(user._id);
 
     res.json({
+      status: "success",
       message: "Login successful",
-      ...tokens,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
+      data: {
+        ...tokens,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+        },
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    next(error);
   }
 };
 
@@ -124,16 +119,13 @@ exports.refreshToken = async (req, res) => {
       return res.status(400).json({ message: "Refresh token is required" });
     }
 
-    // Verify refresh token
     const decoded = await tokenUtils.verifyRefreshToken(refreshToken);
     if (!decoded) {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
 
-    // Revoke old refresh token
     await tokenUtils.revokeRefreshToken(refreshToken);
 
-    // Generate new tokens
     const tokens = await tokenUtils.generateTokens(decoded.userId);
 
     res.json({
@@ -172,10 +164,25 @@ exports.logoutAll = async (req, res) => {
   }
 };
 
-module.exports = {
-  register,
-  login,
-  refreshToken,
-  logout,
-  logoutAll,
+// Verify Token
+exports.verify = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      throw new APIError("User not found", 404);
+    }
+
+    res.json({
+      status: "success",
+      data: {
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };

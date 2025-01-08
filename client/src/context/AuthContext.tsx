@@ -6,6 +6,7 @@ import {
   ReactNode,
 } from "react";
 import api from "@/utils/api";
+import { handleAPIError } from "@/utils/errorHandler";
 
 interface User {
   id: string;
@@ -40,9 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const response = await api.get("/users/me");
-      setUser(response.data);
+      const response = await api.get("/auth/verify");
+      setUser(response.data.data.user);
     } catch (error) {
+      const apiError = handleAPIError(error);
+      console.error("Auth check failed:", apiError.message);
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
     } finally {

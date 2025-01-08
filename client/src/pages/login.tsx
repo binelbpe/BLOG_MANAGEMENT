@@ -6,6 +6,7 @@ import api from "@/utils/api";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { useFormValidation } from "@/hooks/useFormValidation";
+import { handleAPIError } from "@/utils/errorHandler";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -41,6 +42,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
 
     // Validate form
     const validationErrors = validateForm(formData, validationRules);
@@ -52,15 +54,17 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       const response = await api.post("/auth/login", formData);
-      const { accessToken, refreshToken, user } = response.data;
-      login(accessToken, refreshToken, user);
+      const { data } = response.data;
+
+      login(data.accessToken, data.refreshToken, data.user);
       toast.success("Login successful!");
       router.push("/dashboard");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Login failed");
-      if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors);
+    } catch (error) {
+      const apiError = handleAPIError(error);
+      if (apiError.errors) {
+        setErrors(apiError.errors);
       }
+      toast.error(apiError.message);
     } finally {
       setIsSubmitting(false);
     }

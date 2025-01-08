@@ -3,22 +3,15 @@ const router = express.Router();
 const blogController = require("../controllers/blogController");
 const auth = require("../middleware/auth");
 
-// Create a new blog
-router.post("/", auth, blogController.createBlog);
-
-// Get all blogs for logged in user
-router.get("/my-blogs", auth, blogController.getMyBlogs);
-
-// Get all blogs
+// Public routes
 router.get("/", blogController.getAllBlogs);
+router.get("/:id", blogController.getBlogById);
 
-// Get single blog
-router.get("/:id", blogController.getBlog);
-
-// Update blog
-router.patch("/:id", auth, blogController.updateBlog);
-
-// Delete blog
-router.delete("/:id", auth, blogController.deleteBlog);
+// Protected routes
+router.use(auth); // Apply auth middleware to all routes below
+router.post("/", blogController.createBlog);
+router.get("/user/my-blogs", blogController.getUserBlogs);
+router.patch("/:id", blogController.updateBlog);
+router.delete("/:id", blogController.deleteBlog);
 
 module.exports = router;

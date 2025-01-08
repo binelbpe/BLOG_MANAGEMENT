@@ -1,52 +1,116 @@
-const Blog = require("../models/Blog");
+const Blog = require("../models/blog");
+const mongoose = require("mongoose");
+const { APIError } = require("../utils/errorHandler");
 
-// Create a new blog
-const createBlog = async (req, res) => {
+// Create Blog
+exports.createBlog = async (req, res, next) => {
   try {
+    const { title, content } = req.body;
+    const userId = req.user.id;
+
+    if (!title || !content) {
+      throw new APIError("Validation failed", 400, {
+        title: !title ? "Title is required" : "",
+        content: !content ? "Content is required" : "",
+      });
+    }
+
     const blog = new Blog({
-      ...req.body,
-      author: req.user._id,
+      title: title.trim(),
+      content: content.trim(),
+      author: userId,
     });
+
     await blog.save();
-    res.status(201).json(blog);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
+    await blog.populate("author", "username");
 
-// Get all blogs for logged in user
-const getMyBlogs = async (req, res) => {
-  try {
-    const blogs = await Blog.find({ author: req.user._id }).sort({
-      createdAt: -1,
+    res.status(201).json({
+      status: "success",
+      data: blog,
+      message: "Blog created successfully",
     });
-    res.json(blogs);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-// Get all blogs
-const getAllBlogs = async (req, res) => {
+// Get All Blogs with pagination
+exports.getAllBlogs = async (req, res, next) => {
   try {
-    console.log("Fetching all blogs..."); // Debug log
-    const blogs = await Blog.find()
-      .populate("author", "username")
-      .sort({ createdAt: -1 });
-    console.log("Found blogs:", blogs); // Debug log
-    res.json(blogs);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [blogs, total] = await Promise.all([
+      Blog.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("author", "username")
+        .exec(),
+      Blog.countDocuments(),
+    ]);
+
+    const hasMore = total > skip + blogs.length;
+
+    res.json({
+      status: "success",
+      data: {
+        blogs,
+        hasMore,
+        total,
+        currentPage: page,
+      },
+    });
   } catch (error) {
-    console.error("Error in getAllBlogs:", error); // Debug log
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-// Get single blog
-const getBlog = async (req, res) => {
+// Get User's Blogs with pagination
+exports.getUserBlogs = async (req, res, next) => {
   try {
-    const blog = await Blog.findById(req.params.id)
-      .populate("author", "username")
-      .select("-__v");
+    const userId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [blogs, total] = await Promise.all([
+      Blog.find({ author: userId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("author", "username")
+        .exec(),
+      Blog.countDocuments({ author: userId }),
+    ]);
+
+    const hasMore = total > skip + blogs.length;
+
+    res.json({
+      status: "success",
+      data: {
+        blogs,
+        hasMore,
+        total,
+        currentPage: page,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get Single Blog
+exports.getBlogById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid blog ID" });
+    }
+
+    const blog = await Blog.findById(id).populate("author", "username");
 
     if (!blog) {
       return res.status(404).json({ message: "Blog not found" });
@@ -54,56 +118,85 @@ const getBlog = async (req, res) => {
 
     res.json(blog);
   } catch (error) {
-    if (error.kind === "ObjectId") {
-      return res.status(404).json({ message: "Blog not found" });
-    }
-    res.status(500).json({ message: "Server error" });
+    console.error("Get blog error:", error);
+    res.status(500).json({ message: "Failed to fetch blog" });
   }
 };
 
-// Update blog
-const updateBlog = async (req, res) => {
+// Update Blog
+exports.updateBlog = async (req, res) => {
   try {
-    const blog = await Blog.findOne({
-      _id: req.params.id,
-      author: req.user._id,
-    });
+    const { id } = req.params;
+    const { title, content } = req.body;
+    const userId = req.user.id;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid blog ID" });
+    }
+
+    // Additional validation
+    if (!title || !content) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: {
+          title: !title ? "Title is required" : "",
+          content: !content ? "Content is required" : "",
+        },
+      });
+    }
+
+    const blog = await Blog.findById(id);
 
     if (!blog) {
       return res.status(404).json({ message: "Blog not found" });
     }
 
-    Object.assign(blog, req.body);
+    if (blog.author.toString() !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this blog" });
+    }
+
+    blog.title = title.trim();
+    blog.content = content.trim();
+    blog.updatedAt = new Date();
+
     await blog.save();
+    await blog.populate("author", "username");
+
     res.json(blog);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Update blog error:", error);
+    res.status(500).json({ message: "Failed to update blog" });
   }
 };
 
-// Delete blog
-const deleteBlog = async (req, res) => {
+// Delete Blog
+exports.deleteBlog = async (req, res) => {
   try {
-    const blog = await Blog.findOneAndDelete({
-      _id: req.params.id,
-      author: req.user._id,
-    });
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid blog ID" });
+    }
+
+    const blog = await Blog.findById(id);
 
     if (!blog) {
       return res.status(404).json({ message: "Blog not found" });
     }
 
-    res.json({ message: "Blog deleted" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    if (blog.author.toString() !== userId) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this blog" });
+    }
 
-module.exports = {
-  createBlog,
-  getMyBlogs,
-  getAllBlogs,
-  getBlog,
-  updateBlog,
-  deleteBlog,
+    await blog.deleteOne();
+    res.json({ message: "Blog deleted successfully" });
+  } catch (error) {
+    console.error("Delete blog error:", error);
+    res.status(500).json({ message: "Failed to delete blog" });
+  }
 };

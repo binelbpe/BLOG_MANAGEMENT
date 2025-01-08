@@ -9,15 +9,23 @@ const api = axios.create({
 });
 
 // Add request interceptor
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const accessToken = localStorage.getItem("accessToken");
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== "undefined") {
+      const accessToken = localStorage.getItem("accessToken");
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      } else {
+        console.warn("No access token found in localStorage");
+      }
     }
+    return config;
+  },
+  (error) => {
+    console.error("Request interceptor error:", error);
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 // Add response interceptor for token refresh
 api.interceptors.response.use(

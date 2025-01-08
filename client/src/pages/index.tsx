@@ -1,38 +1,74 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Layout from "@/components/Layout";
 import api from "@/utils/api";
 import { Blog } from "@/types";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { handleAPIError } from "@/utils/errorHandler";
 
 export default function Home() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
+  const loader = useRef(null);
 
-  useEffect(() => {
-    fetchBlogs();
-  }, []);
-
-  const fetchBlogs = async () => {
+  const fetchBlogs = async (pageNum: number) => {
     try {
-      const response = await api.get("/blogs");
-      setBlogs(response.data);
-      setLoading(false);
-    } catch (error: any) {
-      toast.error("Failed to fetch blogs");
+      const response = await api.get(`/blogs?page=${pageNum}&limit=10`);
+      const { data } = response.data;
+
+      if (!data) {
+        throw new Error("No data received from server");
+      }
+
+      const { blogs: newBlogs, hasMore: more } = data;
+
+      setBlogs((prev) => (pageNum === 1 ? newBlogs : [...prev, ...newBlogs]));
+      setHasMore(more);
+    } catch (error) {
+      const apiError = handleAPIError(error);
+      toast.error(apiError.message);
+    } finally {
       setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
-        </div>
-      </Layout>
-    );
-  }
+  // Initialize with first page
+  useEffect(() => {
+    fetchBlogs(1);
+  }, []);
+
+  // Intersection Observer callback
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const target = entries[0];
+      if (target.isIntersecting && hasMore && !loading) {
+        setPage((prev) => prev + 1);
+      }
+    },
+    [hasMore, loading]
+  );
+
+  // Set up intersection observer
+  useEffect(() => {
+    const option = {
+      root: null,
+      rootMargin: "20px",
+      threshold: 0,
+    };
+    const observer = new IntersectionObserver(handleObserver, option);
+    if (loader.current) observer.observe(loader.current);
+
+    return () => observer.disconnect();
+  }, [handleObserver]);
+
+  // Fetch more data when page changes
+  useEffect(() => {
+    if (page > 1) {
+      fetchBlogs(page);
+    }
+  }, [page]);
 
   return (
     <Layout>
@@ -49,20 +85,24 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Featured Section */}
+      {/* Blog List */}
       <div className="max-w-7xl mx-auto px-4 mb-16">
         <h2 className="text-2xl font-bold text-primary mb-8">Latest Stories</h2>
 
-        {blogs.length === 0 ? (
-          <div className="bg-white rounded-xl p-12 text-center shadow-sm">
-            <p className="text-xl text-gray-600">No blogs available yet.</p>
+        {loading && page === 1 ? (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
+          </div>
+        ) : blogs.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No blogs available</p>
           </div>
         ) : (
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {blogs.map((blog) => (
               <article
                 key={blog._id}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
               >
                 {/* Card Header with Author Info */}
                 <div className="p-6">
@@ -159,6 +199,16 @@ export default function Home() {
             ))}
           </div>
         )}
+
+        {/* Loading indicator */}
+        <div ref={loader} className="mt-8 text-center">
+          {loading && page > 1 && (
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
+          )}
+          {!hasMore && blogs.length > 0 && (
+            <p className="text-gray-500">No more blogs to load</p>
+          )}
+        </div>
       </div>
     </Layout>
   );
