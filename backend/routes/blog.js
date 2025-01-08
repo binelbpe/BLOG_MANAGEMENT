@@ -15,4 +15,10 @@ router.get("/", blogController.getAllBlogs);
 // Get single blog
 router.get("/:id", blogController.getBlog);
 
+// Update blog
+router.patch("/:id", auth, blogController.updateBlog);
+
+// Delete blog
+router.delete("/:id", auth, blogController.deleteBlog);
+
 module.exports = router;

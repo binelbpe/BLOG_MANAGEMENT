@@ -23,6 +23,17 @@ function Dashboard() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this blog?")) {
+      try {
+        await api.delete(`/blogs/${id}`);
+        toast.success("Blog deleted successfully");
+        fetchBlogs();
+      } catch (error: any) {
+        toast.error("Failed to delete blog");
+      }
+    }
+  };
 
   return (
     <Layout>
@@ -45,7 +56,18 @@ function Dashboard() {
                 {blog.content.substring(0, 200)}...
               </p>
               <div className="flex justify-end space-x-4">
-              
+                <button
+                  onClick={() => router.push(`/blogs/edit/${blog._id}`)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(blog._id)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}

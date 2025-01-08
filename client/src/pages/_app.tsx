@@ -7,7 +7,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <AuthProvider>
       <Component {...pageProps} />
-      <Toaster position="top-center" />
+      <Toaster position="top-right" />
     </AuthProvider>
   );
 }

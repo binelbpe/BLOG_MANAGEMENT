@@ -54,9 +54,49 @@ const getBlog = async (req, res) => {
   }
 };
 
+// Update blog
+const updateBlog = async (req, res) => {
+  try {
+    const blog = await Blog.findOne({
+      _id: req.params.id,
+      author: req.user._id,
+    });
+
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    Object.assign(blog, req.body);
+    await blog.save();
+    res.json(blog);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Delete blog
+const deleteBlog = async (req, res) => {
+  try {
+    const blog = await Blog.findOneAndDelete({
+      _id: req.params.id,
+      author: req.user._id,
+    });
+
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    res.json({ message: "Blog deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createBlog,
   getMyBlogs,
   getAllBlogs,
   getBlog,
+  updateBlog,
+  deleteBlog,
 };
