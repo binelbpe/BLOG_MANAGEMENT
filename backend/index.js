@@ -22,8 +22,13 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => {
+    console.log("Connected to MongoDB");
+    console.log("MongoDB URI:", process.env.MONGODB_URI); // Debug log (remove in production)
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
