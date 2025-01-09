@@ -13,7 +13,7 @@
 
 ---
 
-![Blog Management System](https://via.placeholder.com/800x400?text=Blog+Management+System)
+
 
 **🌐 [Live Demo](https://blogs-client-mil7.vercel.app)**
 
@@ -145,7 +145,7 @@
 
 1️⃣ **Clone the repository**
 ```bash
-git clone [https://github.com/yourusername/blog-management.git](https://github.com/binelbpe/BLOG_MANAGEMENT.git)
+git clone https://github.com/yourusername/blog-management.git
 cd blog-management
 ```
 
@@ -256,7 +256,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 <div align="center">
 
-### Made with ❤️ by BINEL BIJU (https://github.com/binelbpe)
+### Made with ❤️ by [BINEL BIJU](https://github.com/binelbpe)
 
 ⭐️ Star us on GitHub — it motivates us a lot!
 
